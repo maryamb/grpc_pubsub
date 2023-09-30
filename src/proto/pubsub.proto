@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package pubsub;
+
+message SubscribeRequest {
+  string topic = 1;
+}
+
+message SubscribeResponseStream { 
+  string message = 1;
+}
+
+message PublishRequest {
+  string topic = 1;
+  string message = 2;
+}
+
+message PublishResponse {}
+
+service PubSubService {
+  rpc Subscribe(SubscribeRequest) returns (stream SubscribeResponseStream);
+  rpc Publish(PublishRequest) returns (PublishResponse);
+}
