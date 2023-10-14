@@ -1,3 +1,4 @@
+// This is to be able to compile the proto.
 pub mod pub_sub_service {
     tonic::include_proto!("pubsub");
 }
@@ -9,14 +10,9 @@ use tonic::Request;
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut client = PubSubServiceClient::connect("http://[::1]:60041").await?;
     
-let resp = client
-    .publish(Request::new(PublishRequest {
-        topic: "Stein".to_string(),
-        message: "the message of Stein topic".to_string(),
-    }))
-    .await?.into_inner();
-
-    println!("THE PUBLISH RESPONSE IS = {:?}", resp);
-
+    client.publish(Request::new(PublishRequest {
+        topic: "first_topic".to_string(),
+        message: "first message".to_string(),
+    })).await?;
      Ok(())
 }
