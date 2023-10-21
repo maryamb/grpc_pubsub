@@ -16,12 +16,12 @@ name = "pubsub-subscribe-client"
 path = "src/subscribe_client.rs"
 
 [dependencies]
-tonic = "0.9"
+clap = { version = "4.4.6", features = ["derive"] }
+futures = "0.3.28"
 prost = "0.11"
 tokio = { version = "1.0", features = ["macros", "rt-multi-thread"] }
 tokio-stream = "0.1"
-futures = "0.3.28"
-
+tonic = "0.9"
 
 [build-dependencies]
 tonic-build = "0.9"
