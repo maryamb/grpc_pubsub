@@ -11,7 +11,6 @@ use std::sync::RwLock;
 use futures::future::{self, try_join_all};
 
 
-
 // This makes a separate module for the proto. As if it was in its own files. 
 // This is to be able to compile the proto.
 pub mod pub_sub_service {
@@ -43,9 +42,10 @@ impl PubSubService for PubSub {
 
     async fn subscribe(&self, request: Request<SubscribeRequest>) -> Result<Response<Self::SubscribeStream>, Status> {
         let (tx, rx) = mpsc::channel(4);
-        {        
+        {    
+            // .write in this line does mutexing.
             let mut subs = self.all_subscribers.write().unwrap();
-            let mut topic_subs = subs.entry(request.get_ref().topic.to_owned()).or_insert(Subscribers{subscriber: vec![]});
+            let topic_subs = subs.entry(request.get_ref().topic.to_owned()).or_insert(Subscribers{subscriber: vec![]});
             topic_subs.subscriber.push(tx);
         }
         Ok(Response::new(Self::SubscribeStream::new(rx)))
@@ -53,18 +53,20 @@ impl PubSubService for PubSub {
 
     async fn publish(&self, request: Request<PublishRequest>) -> Result<Response<PublishResponse>, Status> {
         let message = &request.get_ref().message;
-        let futures = loop {
+        let topic_subs = loop {
+            // .read also does the mutexing.
             let subs = self.all_subscribers.read().unwrap();
             println!("1 topic = {}", &request.get_ref().topic);
             let topic_subs = match subs.get(&request.get_ref().topic) {
                 None => break vec![],
                 Some(x) => x,
             };
-            let futures = topic_subs.subscriber.iter().map(|tx|
-                tx.send(Ok(SubscribeResponseStream{message: message.clone()}))).collect();
-            break futures;
+            break topic_subs.subscriber.clone();
         };
-        try_join_all(futures).await;
+        let result_holder: Vec<_> = topic_subs.iter().map(|tx|
+            tx.send(Ok(SubscribeResponseStream{message: message.clone()}))).collect();
+        
+        let _ = try_join_all(result_holder).await;
         let response = PublishResponse {};
         /*
         tokio::spawn(async move {
