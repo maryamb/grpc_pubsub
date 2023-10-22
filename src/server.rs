@@ -53,7 +53,7 @@ impl PubSubService for PubSub {
         let topic_subs = loop {
             // .read also does the mutexing.
             let subs = self.topic_subscribers.read().unwrap();
-            println!("1 topic = {}", &request.get_ref().topic);
+            println!("Topic = {} received", &request.get_ref().topic);
             let topic_subs = match subs.get(&request.get_ref().topic) {
                 None => break vec![],
                 Some(x) => x,
