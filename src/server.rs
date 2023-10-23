@@ -1,3 +1,4 @@
+
 use std::collections::HashMap;
 
 use tonic::{Request, Response, Status};
@@ -5,7 +6,7 @@ use tokio::sync::mpsc;
 use tokio_stream::{wrappers::ReceiverStream};
 
 use std::sync::RwLock;
-use futures::future::{try_join_all};
+use futures::future::{join_all};
 
 use clap::Parser;
 
@@ -60,10 +61,14 @@ impl PubSubService for PubSub {
             };
             break topic_subs.subscribers.clone();
         };
-        let result_holder: Vec<_> = topic_subs.iter().map(|tx|
-            tx.send(Ok(SubscribeResponseStream{message: message.clone()}))).collect();
-        
-        let _ = try_join_all(result_holder).await;
+        let result_holder: Vec<_> = topic_subs
+            .iter()
+            .map(|tx| tx.send(Ok(SubscribeResponseStream{message: message.clone()})))
+            .collect();
+        println!("result_holder size is {:?}", result_holder.len()); 
+        let _ = join_all(result_holder).await;
+
+        // In fact, this is a dummy response. Only to match the function signature.
         let response = PublishResponse {};
         Ok(Response::new(response))
     }

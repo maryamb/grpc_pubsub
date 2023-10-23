@@ -4,6 +4,10 @@ version = "0.1.0"
 edition = "2021"
 
 [[bin]] # Bin to run the pubsub gRPC server
+name = "pubsub-server-test"
+path = "src/server_test.rs"
+
+[[bin]] # Bin to run the pubsub gRPC server
 name = "pubsub-server"
 path = "src/server.rs"
 
